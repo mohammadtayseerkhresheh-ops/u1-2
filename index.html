@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الامتحان الأول - المعلم محمد تيسير الخرشة</title>
+    <!-- مكتبات Firebase Realtime Database -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <style>
+        :root {
+            --primary-color: #1a5276;
+            --secondary-color: #2980b9;
+            --bg-color: #f4f6f7;
+            --card-bg: #ffffff;
+            --text-color: #2c3e50;
+            --accent-color: #27ae60;
+            --danger-color: #c0392b;
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            padding: 35px;
+            position: relative;
+            overflow: hidden;
+        }
+        .screen {
+            display: none;
+        }
+        .screen.active {
+            display: block;
+        }
+        h1 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 2.2rem;
+        }
+        h2 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 1.8rem;
+        }
+        p.teacher-name {
+            text-align: center;
+            font-size: 1.4rem;
+            color: var(--secondary-color);
+            margin-bottom: 25px;
+            font-weight: bold;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            font-size: 1.15rem;
+        }
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #bdc3c7;
+            border-radius: 8px;
+            font-size: 1.15rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus, input[type="password"]:focus {
+            border-color: var(--secondary-color);
+        }
+        .btn {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            font-size: 1.15rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+            width: 100%;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .btn:hover {
+            background-color: var(--primary-color);
+        }
+        .btn-secondary {
+            background-color: #7f8c8d;
+        }
+        .btn-secondary:hover {
+            background-color: #626567;
+        }
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 12px;
+            font-weight: bold;
+            color: #7f8c8d;
+            font-size: 1.15rem;
+        }
+        .ltr-content {
+            direction: ltr !important;
+            text-align: left !important;
+        }
+        .reading-passage {
+            background: #eaf2f8;
+            border-left: 5px solid var(--secondary-color);
+            padding: 20px;
+            margin-bottom: 22px;
+            border-radius: 8px;
+            line-height: 1.8;
+            font-size: 1.15rem;
+            color: #1a252f;
+        }
+        .question-text {
+            font-size: 1.3rem;
+            margin-bottom: 22px;
+            font-weight: bold;
+            color: var(--primary-color);
+            line-height: 1.6;
+        }
+        .options-list {
+            list-style: none;
+            margin-bottom: 25px;
+        }
+        .options-list li {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            padding: 14px 18px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1.15rem;
+        }
+        .options-list li:hover {
+            background: #e8f4f8;
+            border-color: var(--secondary-color);
+        }
+        .options-list li.selected {
+            background: #d4efdf;
+            border-color: var(--accent-color);
+            font-weight: bold;
+        }
+        .quiz-footer {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        .quiz-footer button {
+            width: 48%;
+        }
+        .underline-bold {
+            text-decoration: underline;
+            font-weight: bold;
+            color: #000000;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 1.05rem;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: center;
+        }
+        th {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        .alert-box {
+            background-color: #f9e79f;
+            color: #7d6608;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- شاشة الترحيب والغلاف -->
+    <div id="welcome-screen" class="screen active">
+        <h1>الامتحان الأول</h1>
+        <p class="teacher-name">إعداد المعلم: محمد تيسير الخرشة</p>
+        
+        <div id="cheating-alert" class="alert-box">تنبيه أمني: تحذير من مغادرة الشاشة! المحاولة القادمة ستؤدي إلى إنهاء الامتحان وتسليمه تلقائياً.</div>
+
+        <div class="form-group">
+            <label for="student-name">أدخل اسمك الثلاثي الكامل للبدء (إجباري):</label>
+            <input type="text" id="student-name" placeholder="الاسم الكامل للطالب...">
+        </div>
+        <button class="btn" onclick="startQuiz()">ابدأ الامتحان</button>
+        <hr style="margin: 25px 0; border:0; border-top: 1px solid #ddd;">
+        <button class="btn btn-secondary" onclick="showLoginModal()">لوحة المعلم</button>
+    </div>
+
+    <!-- شاشة تسجيل دخول المعلم -->
+    <div id="login-screen" class="screen">
+        <h2>لوحة تحكم المعلم</h2>
+        <div class="form-group">
+            <label for="admin-pass">أدخل كلمة المرور المشفرة:</label>
+            <input type="password" id="admin-pass" placeholder="كلمة المرور...">
+        </div>
+        <button class="btn" onclick="verifyAdmin()">دخول لوحة النتائج</button>
+        <button class="btn btn-secondary" onclick="showScreen('welcome-screen')" style="margin-top: 10px;">رجوع</button>
+    </div>
+
+    <!-- لوحة نتائج الطلاب -->
+    <div id="admin-dashboard" class="screen">
+        <h2>سجل درجات الطلاب</h2>
+        <div style="max-height: 350px; overflow-y: auto;">
+            <table id="results-table">
+                <thead>
+                    <tr>
+                        <th>اسم الطالب</th>
+                        <th>الدرجة (من 100)</th>
+                        <th>التاريخ والوقت</th>
+                    </tr>
+                </thead>
+                <tbody id="results-tbody">
+                </tbody>
+            </table>
+        </div>
+        <button class="btn btn-secondary" onclick="showScreen('welcome-screen')" style="margin-top: 20px;">العودة للرئيسية</button>
+    </div>
+
+    <!-- شاشة الامتحان التفاعلي -->
+    <div id="quiz-screen" class="screen">
+        <div class="quiz-header">
+            <span id="question-counter">السؤال 1 من 50</span>
+            <span>اللغة الإنجليزية - الصف الثاني الثانوي (الوحدات 1 و 2)</span>
+        </div>
+
+        <div id="passage-container" class="ltr-content"></div>
+        <div id="question-container" class="ltr-content"></div>
+        <ul id="options-container" class="options-list ltr-content"></ul>
+
+        <div class="quiz-footer">
+            <button class="btn btn-secondary" id="prev-btn" onclick="prevQuestion()">السؤال السابق</button>
+            <button class="btn" id="next-btn" onclick="nextQuestion()">السؤال التالي</button>
+        </div>
+    </div>
+
+    <!-- شاشة النتيجة النهائية -->
+    <div id="result-screen" class="screen">
+        <h2>نتيجة الامتحان النهائي</h2>
+        <div style="text-align: center; margin: 25px 0;">
+            الدرجة المستحقة: <h1 id="final-score" style="font-size: 3.5rem; color: var(--accent-color); display: inline-block;">0</h1> من 100
+        </div>
+        <h3>التغذية الراجعة وتصحيح الإجابات:</h3>
+        <div id="feedback-container" class="ltr-content" style="max-height: 320px; overflow-y: auto; margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px; font-size: 1.1rem;"></div>
+        <button class="btn" onclick="location.reload()" style="margin-top: 20px;">إعادة الامتحان</button>
+    </div>
+</div>
+
+<script>
+    // ربط Firebase Realtime Database
+    const firebaseConfig = {
+        apiKey: "AIzaSyCcAfs-ASTEYqZyUj_DyQeAlZ5NJTWZRVw",
+        authDomain: "mk-mk-f5ba6.firebaseapp.com",
+        databaseURL: "https://mk-mk-f5ba6-default-rtdb.firebaseio.com",
+        projectId: "mk-mk-f5ba6",
+        storageBucket: "mk-mk-f5ba6.firebasestorage.app",
+        messagingSenderId: "840379743743",
+        appId: "1:840379743743:web:f40465d3c57b65dab23bca",
+        measurementId: "G-RKK876F89D"
+    };
+    
+    try {
+        firebase.initializeApp(firebaseConfig);
+        var database = firebase.database();
+    } catch (e) {
+        console.log("Firebase Database Error:", e);
+    }
+
+    const rawQuestions = [
+        { passage: "Many people do feel they take on a new identity when using another language. A 2006 study of bilingual Mexican-Americans asked them to take a personality test in both English and Spanish. Amazingly, the results varied, depending on which language each individual was using. Undoubtedly, how much you pick up a culture alongside a language will depend on how and why you are learning it, and whether you wish to become part of the second language culture, but it's fascinating to consider that you might actually be a (slightly) different person when speaking a second language.", q: "In the above text, the author ________", options: ["points out shortcomings in a specific piece of research.", "suggests an alternative explanation for linguistic relativity.", "refers to research into the effect of language on character.", "mentions a benefit to perceiving the world differently."], answer: 2 },
+        { passage: "I’d had Oscar from when I was very little and, for as long as I could remember, he had only had one eye. It wasn’t important to me, I loved him no matter how shabby and old he was.", q: "The writer loved Oscar because:", options: ["he always looked new and beautiful.", "he had two beautiful eyes.", "he was special to the writer despite his old appearance.", "his mother had bought him recently."], answer: 2 },
+        { passage: "\"The crowd inched closer to the yellow line as the train appeared and gradually rumbled to a stop. When the doors slid open, the passengers alighting had to elbow their way through the sea of people entering the carriages. The fact that there wasn't a better system was something that surprised Malek.\"", q: "The underlined indefinite pronoun \"<span class=\"underline-bold\">something</span>\" refers to:", options: ["a better system", "the sea of people", "the carriages", "the fact"], answer: 0 },
+        { passage: "\"First impressions are important in our personal and professional lives, which is why we need to be aware of the signals we are sending out and, if necessary, change them. Most people understand that a smile and eye contact are generally perceived positively so they make use of these strategically. On the other hand, they may be completely oblivious to the fact that their crossed arms can make them look closed or even hostile.\"", q: "According to the text, crossed arms can give a negative impression because they can make a person look:", options: ["tired and uninterested in conversation.", "overly confident and aggressive.", "closed or even hostile.", "distracted and anxious."], answer: 2 },
+        { passage: "Some indigenous people of the Amazon rainforest in Brazil simply distinguish between a smaller amount and a larger amount. We can probably deduce from this that they don't feel the need to quantify precisely in the way that many of us do.", q: "A word that has a similar meaning to the underlined word \"<span class=\"underline-bold\">deduce</span>\" is:", options: ["conclude", "moulded", "stumble", "flood"], answer: 0 },
+        { passage: "In the interest of safety, he stood back from the track, but it was a poor choice of spot. Inadvertently, he was blocking the path of commuters milling around the platform, bolting this way and that, colliding, heads down, wordless. With some effort, Malek dragged himself towards the wall, and waited there.", q: "Why did Malek have a poor choice of spot?", options: ["Because he was blocking the path of commuters advertently", "Because he was not blocking the path of commuters inadvertently", "Because he was blocking the path of commuters inadvertently", "Because he was blocking the path of the train inadvertently"], answer: 2 },
+        { passage: "The journey continued. Malek was now in the rhythm of it, the same routine at one station and then another as people got on and off the train, dispersing on the platform or settling into some corner of the carriage. Three stops from Les Corts, the old man and woman stood up to leave.", q: "What is the type of the underlined reference device \"<span class=\"underline-bold\">another</span>\"?", options: ["determiner", "demonstrative pronoun", "indefinite pronoun", "object pronoun"], answer: 0 },
+        { passage: "It had always been on my bucket list. A country of such amazing contrasts, the Atacama Desert at one end of the country, and the edge of Antarctica at the other. Old colonial towns, and the modern skyscrapers of Santiago. Where am I talking about? Chile of course!", q: "What makes Chile a country of amazing contrasts?", options: ["It has only modern cities.", "It has deserts, Antarctica, old towns and modern skyscrapers.", "It has many beaches and forests.", "It has only colonial towns."], answer: 1 },
+        { passage: "What was, in my view, completely inexcusable, was that at no time were we offered an apology of any kind, either by the driver on the day, or by the company in the days that followed.", q: "What did Malek find completely inexcusable?", options: ["The cost of the journey.", "The cold weather.", "The lack of an apology.", "The distance to the airport."], answer: 2 },
+        { q: "What kind of car would we ideally ___________?", options: ["plump for", "be in line with", "click with", "set great store by"], answer: 0 },
+        { q: "Every time we eat out, he always tries to avoid paying his share. He's so ___________", options: ["tight-fisted", "open-minded", "passionate about", "absent-minded"], answer: 0 },
+        { q: "The compound adjective that has stress on the first word is:", options: ["quick-witted", "tongue-tied", "absent-minded", "thin-skinned"], answer: 1 },
+        { q: "In very old age, we may become more ___________ and quick to take offence.", options: ["eye-catching", "red-hot", "thin-skinned", "good-looking"], answer: 2 },
+        { q: "He is behaving very strangely at the moment. If I were you, I'd ___________ clear of him for a while.", options: ["umpteen", "lurch", "steer", "indigenous"], answer: 2 },
+        { q: "To be attractive or different enough to be noticed is the figurative meaning of to ___________", options: ["keep an eye", "catch his eye", "made his way", "forge ahead"], answer: 1 },
+        { q: "Do we understand what makes us ___________? Take a moment to stop and think about the things that define us.", options: ["tick", "kick", "click", "think"], answer: 0 },
+        { q: "Why does a speaker use a [slower pace]?", options: ["To ask a rhetorical question", "To repeat key words", "To emphasise a key point", "To end the talk"], answer: 2 },
+        { q: "Which of the following is correct regarding writing a blog post about the past?", options: ["You should give the background to the memory in the conclusion.", "You should introduce the memory by explaining why the memory is still significant for you.", "You should use time linkers to show when things happened.", "You should focus entirely on fictional events."], answer: 2 },
+        { q: "Idioms have a ___________ meaning.", options: ["figurative", "literal", "bilingual", "formal"], answer: 0 },
+        { q: "I was ___________ by the news that our local bus service had been suspended.", options: ["backpedal", "thunder", "staggered", "brag"], answer: 2 },
+        { q: "Our volunteers need to be ___________ individuals with a high sense of ___________", options: ["dedicated - commitment", "dedicate - commission", "dedicated - committed", "dedication - commission"], answer: 0 },
+        { q: "To add emphasis, we can begin sentences with negative adverbials, such as seldom and rarely or words like only, so, and such. We call this ___________", options: ["inversion", "cleft", "negotiating", "back reference"], answer: 0 },
+        { q: "By August next year, I ___________ here for two years.", options: ["will live", "have lived", "will have been living", "had been living"], answer: 2 },
+        { q: "What makes me excited is the speed. The correct grammatical function of the above sentence is…", options: ["to emphasise the pronoun", "to emphasise the verb", "to emphasise the subject", "to emphasise the object."], answer: 3 },
+        { q: "No sooner ___________ set off for Dead Sea than the car broke down.", options: ["we had", "had we", "did we", "we have"], answer: 1 },
+        { q: "I have been reading a book about wildlife in Jordan. This sentence means:", options: ["I have finished reading the book.", "I was reading the book.", "I am still reading the book.", "I will be reading the book."], answer: 2 },
+        { q: "I didn't change platforms until I saw the sign. The sentence that has the same meaning as the sentence above is:", options: ["Only when I saw the sign did I change platforms.", "Only when did I see the sign did I change platforms.", "Only when did I see the sign I changed platforms.", "Only when I see the sign I changed platforms."], answer: 0 },
+        { q: "What you can expect is good food, fast cars and great roads. The correct grammatical function of the above sentence is…", options: ["to emphasise the subject", "to emphasise the object", "to emphasise the verb", "to emphasise the pronoun."], answer: 1 },
+        { q: "In cleft sentences starting with it, the tone depends on the context. If the second part of the sentence is new information, the tone usually _________ tone. If the second part is not new information, there is a ______________ tone.", options: ["falls / falling-rising", "rises / falling-rising", "falls / rising-falling", "rises / rising-falling"], answer: 0 },
+        { q: "We need to check the insurance cover for winter sports before we book. The sentence that emphasises the underlined words is:", options: ["It was the insurance cover for winter sports that we need to check before we book.", "It was the insurance that we needed to check before we book.", "It's the insurance cover for winter sports that we need to check before we book.", "It's the winter sport that we need to check before we book."], answer: 2 },
+        { q: "Not once did he feel sorry for himself. The correct grammatical function of the above sentence is…", options: ["to make dramatic emphasis", "to emphasise the auxiliary verb", "to emphasise the verb", "to emphasise the subject."], answer: 0 },
+        { q: "What they finally did was to decide to go on vacation. The correct grammatical function of the above sentence is…", options: ["to emphasise the object", "to emphasise the verb", "to emphasise the subject", "to emphasise the pronoun."], answer: 1 },
+        { q: "I saw my nephew at Business Park yesterday. The sentence that emphasises the underlined words is:", options: ["Who I see at Business Park yesterday was my nephew.", "The person who I saw yesterday at Business Park was my nephew.", "It's the nephew that he saw at Business Park yesterday.", "The person who did I see at Business Park yesterday was my nephew."], answer: 1 },
+        { q: "When I finish the marathon, I ___________ 42 kilometres.", options: ["am running", "have run", "will have run", "will have ran"], answer: 2 },
+        { q: "But in fact ___________ was the reversing that I did really well on.", options: ["what", "all", "it", "that"], answer: 2 },
+        { q: "The thing I'd been very worried about ___________ the reversing.", options: ["had", "are", "is", "was"], answer: 3 },
+        { q: "When writing a formal email of complaint regarding a transport delay, which opening sentence is most appropriate?", options: ["Hey there, your trains are always awful!", "I am writing to express my strong dissatisfaction with the recent service delays.", "Guess what happened to me on the train today?", "To whom it may concern, why is your transport so funny?"], answer: 1 },
+        { q: "Blog posts are often quite personal, so begin by ___________", options: ["using time linkers to show when things happened.", "explaining why the memory was significant.", "giving advice for the future.", "explaining the memory."], answer: 1 },
+        { q: "I had to wait for him. The sentence that has the same meaning of the sentence above is:", options: ["Waiting for him is my choice.", "I had no choice but to wait for him.", "I have a choice to wait for him.", "Waiting for him is optional."], answer: 1 },
+        { q: "While writing an e-mail of complaint, we can use clauses of concession to give balance like:", options: ["Although a short delay might be acceptable.", "I would like to emphasise that treatment such as this cannot be tolerated.", "There are pros and cons for each.", "This experience convinced me that."], answer: 0 },
+        { q: "It was because of Suha's commitment that the new rail project was successful. She was the driving ___________ behind it.", options: ["force", "plain", "steer", "ride"], answer: 0 },
+        { q: "I think it is blindingly ___________ that there is a serious issue with your system.", options: ["opposed", "mistaken", "overrated", "obvious"], answer: 3 },
+        { q: "I'm not sure about buying a car now because I didn't realise how big the ___________ would be.", options: ["outset", "outcome", "breakthrough", "outlay"], answer: 3 },
+        { q: "I have never had a problem with my passport. The correct negative inversion of the sentence above is:", options: ["At no time I have ever had a problem with my passport.", "At no time have I ever had a problem with my passport.", "At no time I ever have had a problem with my passport.", "At no time had I ever had a problem with my passport."], answer: 1 },
+        { q: "Not only ___________ I pass, but I passed with flying colours!", options: ["do", "was", "did", "had"], answer: 2 },
+        { q: "By August, I’ll have been living here for two years.", options: ["a temporary situation in progress now", "an action in progress up to a certain time in the future", "an action that will be completed before a certain point in the future", "an action that will be in progress at a specific time in the future"], answer: 1 },
+        { q: "I ___________ way too much time on social media.", options: ["will has spent", "have spent", "was spending", "had spent"], answer: 1 },
+        { q: "I’ve just ___________ in the hills. It’s gorgeous out there.", options: ["have been", "been", "was being", "am being"], answer: 1 },
+        { q: "I can't be bothered to keep logging in and I ___________ the number of times I check it to maybe once or twice a day.", options: ["have reduced", "was reducing", "will have reduced", "had reduced"], answer: 0 },
+        { q: "When you write an email of complaint, you should use initial comment adverbs, such as:", options: ["realistically", "completely", "happily", "blindingly"], answer: 0 }
+    ];
+
+    let studentName = "";
+    let currentQuestionIndex = 0;
+    let questions = [];
+    let userAnswers = {};
+    let cheatingWarnings = 0;
+
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    function showScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+    }
+
+    function startQuiz() {
+        const nameInput = document.getElementById('student-name').value.trim();
+        if (!nameInput) {
+            alert('يجب إدخال اسمك الكامل قبل بدء الامتحان!');
+            return;
+        }
+        studentName = nameInput;
+        
+        questions = JSON.parse(JSON.stringify(rawQuestions));
+        shuffleArray(questions);
+        questions.forEach(q => {
+            let correctText = q.options[q.answer];
+            shuffleArray(q.options);
+            q.answer = q.options.indexOf(correctText);
+        });
+
+        currentQuestionIndex = 0;
+        userAnswers = {};
+        cheatingWarnings = 0;
+        showScreen('quiz-screen');
+        renderQuestion();
+    }
+
+    function renderQuestion() {
+        const q = questions[currentQuestionIndex];
+        document.getElementById('question-counter').innerText = `السؤال ${currentQuestionIndex + 1} من ${questions.length}`;
+        
+        const passageContainer = document.getElementById('passage-container');
+        if (q.passage) {
+            passageContainer.innerHTML = `<div class="reading-passage"><strong>Read the text:</strong><br>${q.passage}</div>`;
+            passageContainer.style.display = 'block';
+        } else {
+            passageContainer.innerHTML = '';
+            passageContainer.style.display = 'none';
+        }
+
+        document.getElementById('question-container').innerHTML = `<div class="question-text">${currentQuestionIndex + 1}. ${q.q}</div>`;
+
+        const optionsContainer = document.getElementById('options-container');
+        optionsContainer.innerHTML = '';
+        q.options.forEach((opt, idx) => {
+            let li = document.createElement('li');
+            li.innerHTML = opt;
+            if (userAnswers[currentQuestionIndex] === idx) {
+                li.classList.add('selected');
+            }
+            li.onclick = () => selectOption(idx);
+            optionsContainer.appendChild(li);
+        });
+
+        document.getElementById('prev-btn').style.display = currentQuestionIndex === 0 ? 'none' : 'block';
+        document.getElementById('next-btn').innerText = currentQuestionIndex === questions.length - 1 ? 'إنهاء وتسليم الامتحان' : 'السؤال التالي';
+    }
+
+    function selectOption(optionIndex) {
+        userAnswers[currentQuestionIndex] = optionIndex;
+        renderQuestion();
+    }
+
+    function nextQuestion() {
+        if (currentQuestionIndex < questions.length - 1) {
+            currentQuestionIndex++;
+            renderQuestion();
+        } else {
+            finishQuiz();
+        }
+    }
+
+    function prevQuestion() {
+        if (currentQuestionIndex > 0) {
+            currentQuestionIndex--;
+            renderQuestion();
+        }
+    }
+
+    function finishQuiz() {
+        let score = 0;
+        let feedbackHtml = '';
+
+        questions.forEach((q, idx) => {
+            let userAns = userAnswers[idx];
+            let isCorrect = (userAns === q.answer);
+            if (isCorrect) {
+                score += (100 / questions.length);
+            }
+
+            feedbackHtml += `<div style="margin-bottom: 12px; padding: 12px; border-radius: 6px; border-left: 4px solid ${isCorrect ? '#27ae60' : '#c0392b'}; background: ${isCorrect ? '#e8f8f5' : '#f8d7da'}">
+                <strong>Question ${idx + 1}:</strong> ${q.q}<br>
+                <strong>Your Answer:</strong> ${userAns !== undefined ? q.options[userAns] : '<span style="color:red">Not Answered</span>'}<br>
+                <strong>Correct Answer:</strong> <span style="color: #27ae60; font-weight:bold;">${q.options[q.answer]}</span>
+            </div>`;
+        });
+
+        let finalScoreRounded = Math.round(score);
+        document.getElementById('final-score').innerText = finalScoreRounded;
+        document.getElementById('feedback-container').innerHTML = feedbackHtml;
+
+        saveResultToDatabase(studentName, finalScoreRounded);
+        showScreen('result-screen');
+    }
+
+    function saveResultToDatabase(name, score) {
+        const timestamp = new Date().toLocaleString('ar-JO');
+        if (typeof database !== 'undefined') {
+            database.ref('exam_results').push({
+                studentName: name,
+                score: score,
+                date: timestamp
+            });
+        } else {
+            let localResults = JSON.parse(localStorage.getItem('exam_results') || '[]');
+            localResults.push({ studentName: name, score: score, date: timestamp });
+            localStorage.setItem('exam_results', JSON.stringify(localResults));
+        }
+    }
+
+    function showLoginModal() {
+        showScreen('login-screen');
+    }
+
+    function verifyAdmin() {
+        const pass = document.getElementById('admin-pass').value;
+        if (pass === "MK1978mk") {
+            loadAdminDashboard();
+            showScreen('admin-dashboard');
+        } else {
+            alert('كلمة المرور غير صحيحة!');
+        }
+    }
+
+    function loadAdminDashboard() {
+        const tbody = document.getElementById('results-tbody');
+        tbody.innerHTML = '';
+
+        if (typeof database !== 'undefined') {
+            database.ref('exam_results').once('value', snapshot => {
+                const data = snapshot.val();
+                if (data) {
+                    Object.values(data).forEach(row => {
+                        let tr = document.createElement('tr');
+                        tr.innerHTML = `<td>${row.studentName}</td><td>${row.score}</td><td>${row.date}</td>`;
+                        tbody.appendChild(tr);
+                    });
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="3">لا توجد نتائج مسجلة حتى الآن.</td></tr>`;
+                }
+            });
+        } else {
+            let localResults = JSON.parse(localStorage.getItem('exam_results') || '[]');
+            if (localResults.length > 0) {
+                localResults.forEach(row => {
+                    let tr = document.createElement('tr');
+                    tr.innerHTML = `<td>${row.studentName}</td><td>${row.score}</td><td>${row.date}</td>`;
+                    tbody.appendChild(tr);
+                });
+            } else {
+                tbody.innerHTML = `<tr><td colspan="3">لا توجد نتائج مسجلة حتى الآن.</td></tr>`;
+            }
+        }
+    }
+
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.addEventListener('copy', e => e.preventDefault());
+    
+    window.addEventListener('blur', () => {
+        const quizScreen = document.getElementById('quiz-screen');
+        if (quizScreen.classList.contains('active')) {
+            cheatingWarnings++;
+            if (cheatingWarnings === 1) {
+                document.getElementById('cheating-alert').style.display = 'block';
+            } else if (cheatingWarnings >= 2) {
+                alert('تم رصد محاولة مغادرة الشاشة للمرة الثانية! سيتم إنهاء الامتحان وتسليمه تلقائياً.');
+                finishQuiz();
+            }
+        }
+    });
+</script>
+
+</body>
+</html>
